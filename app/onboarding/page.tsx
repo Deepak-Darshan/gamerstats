@@ -54,6 +54,16 @@ export default function OnboardingPage() {
       return
     }
 
+    // Validate tag formats
+    const tagPlatforms = ['brawlstars', 'clashroyale'] as const
+    for (const p of tagPlatforms) {
+      const val = accounts[p].trim()
+      if (val && !/^#[A-Z0-9]{3,12}$/i.test(val)) {
+        setError(`${p === 'brawlstars' ? 'Brawl Stars' : 'Clash Royale'} tag must start with # followed by letters and numbers (e.g. #ABC123)`)
+        return
+      }
+    }
+
     setLoading(true)
 
     // Insert profile

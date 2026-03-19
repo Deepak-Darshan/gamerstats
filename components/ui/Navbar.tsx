@@ -17,6 +17,7 @@ export default function Navbar() {
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/friends', label: 'Friends' },
     { href: '/leaderboard', label: 'Leaderboard' },
+    { href: '/settings', label: 'Settings' },
   ]
 
   return (

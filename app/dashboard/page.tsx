@@ -125,13 +125,19 @@ async function fetchStats(account: LinkedAccount): Promise<FetchedStat> {
 
     if (account.platform === 'brawlstars') {
       const res = await fetch(`/api/brawlstars?tag=${encodeURIComponent(account.platform_username)}`)
-      if (!res.ok) return { account, data: null, error: 'Player not found' }
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        return { account, data: null, error: body.detail ? `${body.error}: ${body.detail}` : body.error || 'Player not found' }
+      }
       return { account, data: await res.json() }
     }
 
     if (account.platform === 'clashroyale') {
       const res = await fetch(`/api/clashroyale?tag=${encodeURIComponent(account.platform_username)}`)
-      if (!res.ok) return { account, data: null, error: 'Player not found' }
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        return { account, data: null, error: body.detail ? `${body.error}: ${body.detail}` : body.error || 'Player not found' }
+      }
       return { account, data: await res.json() }
     }
 

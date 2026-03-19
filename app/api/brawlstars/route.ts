@@ -6,18 +6,19 @@ export async function GET(request: NextRequest) {
     return Response.json({ error: 'tag is required' }, { status: 400 })
   }
 
-  // Remove leading # if present, then encode
-  const cleanTag = tag.replace(/^#/, '')
-  const res = await fetch(`https://api.brawlstars.com/v1/players/%23${encodeURIComponent(cleanTag)}`, {
+  // Remove leading # if present, uppercase, then encode
+  const cleanTag = tag.replace(/^#/, '').toUpperCase()
+  const res = await fetch(`https://api.brawlstars.com/v1/players/%23${cleanTag}`, {
     headers: {
       Authorization: `Bearer ${process.env.BRAWL_STARS_API_KEY}`,
     },
-    next: { revalidate: 300 },
+    cache: 'no-store',
   })
 
   if (!res.ok) {
     const body = await res.text()
-    return Response.json({ error: 'Player not found', detail: body }, { status: res.status })
+    console.error(`[BrawlStars] ${res.status} for tag #${cleanTag}:`, body)
+    return Response.json({ error: `API error ${res.status}`, detail: body }, { status: res.status })
   }
 
   const data = await res.json()

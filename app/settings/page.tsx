@@ -77,26 +77,42 @@ export default function SettingsPage() {
     setFieldErrors(prev => ({ ...prev, [platform]: '' }))
     setSaving(platform)
 
+    let saveError: string | null = null
+
     if (!value) {
-      // Remove account
-      await supabase
+      const { error } = await supabase
         .from('linked_accounts')
         .delete()
         .eq('user_id', userId)
         .eq('platform', platform)
+      if (error) saveError = error.message
     } else {
-      // Upsert — unique(user_id, platform) constraint allows this
-      await supabase
+      // Try update first, then insert if no row exists
+      const { error: updateError, data: updated } = await supabase
         .from('linked_accounts')
-        .upsert(
-          { user_id: userId, platform, platform_username: value },
-          { onConflict: 'user_id,platform' }
-        )
+        .update({ platform_username: value })
+        .eq('user_id', userId)
+        .eq('platform', platform)
+        .select()
+
+      if (updateError) {
+        saveError = updateError.message
+      } else if (!updated || updated.length === 0) {
+        // No existing row — insert
+        const { error: insertError } = await supabase
+          .from('linked_accounts')
+          .insert({ user_id: userId, platform, platform_username: value })
+        if (insertError) saveError = insertError.message
+      }
     }
 
     setSaving(null)
-    setSaved(platform)
-    setTimeout(() => setSaved(null), 2000)
+    if (saveError) {
+      setFieldErrors(prev => ({ ...prev, [platform]: saveError! }))
+    } else {
+      setSaved(platform)
+      setTimeout(() => setSaved(null), 2000)
+    }
   }
 
   if (loading) {

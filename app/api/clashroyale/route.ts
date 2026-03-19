@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   }
 
   const cleanTag = tag.replace(/^#/, '').toUpperCase()
-  const res = await fetch(`https://api.clashroyale.com/v1/players/%23${cleanTag}`, {
+  const res = await fetch(`https://proxy.royaleapi.dev/v1/players/%23${cleanTag}`, {
     headers: {
       Authorization: `Bearer ${process.env.CLASH_ROYALE_API_KEY}`,
     },

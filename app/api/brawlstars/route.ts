@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
 
   // Remove leading # if present, uppercase, then encode
   const cleanTag = tag.replace(/^#/, '').toUpperCase()
-  const res = await fetch(`https://api.brawlstars.com/v1/players/%23${cleanTag}`, {
+  const res = await fetch(`https://bsproxy.royaleapi.dev/v1/players/%23${cleanTag}`, {
     headers: {
       Authorization: `Bearer ${process.env.BRAWL_STARS_API_KEY}`,
     },

@@ -20,7 +20,7 @@ function LoginForm() {
     setError('')
     setLoading(true)
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
       setError(error.message)
@@ -28,7 +28,21 @@ function LoginForm() {
       return
     }
 
-    router.replace(redirect || '/dashboard')
+    // Check whether this user has already completed onboarding
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', authData.user.id)
+      .maybeSingle()
+
+    if (profile?.username) {
+      router.replace(redirect || '/dashboard')
+    } else {
+      const onboardingUrl = redirect
+        ? `/onboarding?redirect=${encodeURIComponent(redirect)}`
+        : '/onboarding'
+      router.replace(onboardingUrl)
+    }
   }
 
   return (

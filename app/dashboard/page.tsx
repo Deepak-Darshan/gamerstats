@@ -49,7 +49,7 @@ export default function DashboardPage() {
         .eq('id', session.user.id)
         .single()
 
-      if (!profile) { router.replace('/onboarding'); return }
+      if (!profile?.username) { router.replace('/onboarding'); return }
       setUsername(profile.username)
       setInviteToken(profile.invite_token ?? null)
 

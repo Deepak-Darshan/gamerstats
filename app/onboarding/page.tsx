@@ -70,7 +70,7 @@ function OnboardingForm() {
 
     const { error: profileError } = await supabase
       .from('profiles')
-      .insert({ id: userId, username: username.trim() })
+      .upsert({ id: userId, username: username.trim() })
 
     if (profileError) {
       setError(profileError.message)

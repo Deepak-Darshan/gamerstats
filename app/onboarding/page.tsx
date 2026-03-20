@@ -68,9 +68,14 @@ function OnboardingForm() {
 
     setLoading(true)
 
+    // Always get userId fresh from the session rather than relying on state
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) { router.replace('/auth/login'); return }
+    const uid = session.user.id
+
     const { error: profileError } = await supabase
       .from('profiles')
-      .upsert({ id: userId, username: username.trim() })
+      .upsert({ id: uid, username: username.trim() })
 
     if (profileError) {
       setError(profileError.message)
@@ -85,11 +90,14 @@ function OnboardingForm() {
     if (linkedAccounts.length > 0) {
       const { error: accountsError } = await supabase
         .from('linked_accounts')
-        .insert(linkedAccounts.map(a => ({
-          user_id: userId,
-          platform: a.platform,
-          platform_username: a.username,
-        })))
+        .upsert(
+          linkedAccounts.map(a => ({
+            user_id: uid,
+            platform: a.platform,
+            platform_username: a.username,
+          })),
+          { onConflict: 'user_id,platform' }
+        )
 
       if (accountsError) {
         setError(accountsError.message)

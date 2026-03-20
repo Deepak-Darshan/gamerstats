@@ -45,9 +45,9 @@ export default function DashboardPage() {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('username, invite_token')
+        .select('*')
         .eq('id', session.user.id)
-        .single()
+        .maybeSingle()
 
       if (!profile?.username) { router.replace('/onboarding'); return }
       setUsername(profile.username)

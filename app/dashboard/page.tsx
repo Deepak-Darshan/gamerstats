@@ -24,10 +24,10 @@ interface FriendEntry {
   platforms: string[]
 }
 
-const PLATFORM_BADGES: Record<string, { text: string; bg: string; color: string }> = {
-  chess: { text: '♟', bg: 'bg-amber-500/20', color: 'text-amber-400' },
-  brawlstars: { text: 'BS', bg: 'bg-yellow-500/20', color: 'text-yellow-400' },
-  clashroyale: { text: 'CR', bg: 'bg-blue-500/20', color: 'text-blue-400' },
+const PLATFORM_LOGOS: Record<string, string> = {
+  chess: '/logos/chess.png',
+  brawlstars: '/logos/brawlstars.png',
+  clashroyale: '/logos/clashroyale.png',
 }
 
 export default function DashboardPage() {
@@ -215,16 +215,9 @@ export default function DashboardPage() {
                         <span className="text-xs text-gray-600">No games linked</span>
                       ) : (
                         friend.platforms.map(p => {
-                          const badge = PLATFORM_BADGES[p]
-                          return badge ? (
-                            <span
-                              key={p}
-                              title={p}
-                              className={`${badge.bg} ${badge.color} text-xs font-bold px-1.5 py-0.5 rounded`}
-                            >
-                              {badge.text}
-                            </span>
-                          ) : null
+                          const src = PLATFORM_LOGOS[p]
+                          // eslint-disable-next-line @next/next/no-img-element
+                          return src ? <img key={p} src={src} alt={p} title={p} className="w-5 h-5 rounded object-cover" /> : null
                         })
                       )}
                     </div>

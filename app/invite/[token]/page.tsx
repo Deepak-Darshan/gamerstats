@@ -6,10 +6,10 @@ import Link from 'next/link'
 import { Link2, Gamepad2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
-const PLATFORM_INFO: Record<string, { label: string; badge: string; bg: string; color: string }> = {
-  chess: { label: 'Chess.com', badge: '♟', bg: 'bg-amber-500/20', color: 'text-amber-400' },
-  brawlstars: { label: 'Brawl Stars', badge: 'BS', bg: 'bg-yellow-500/20', color: 'text-yellow-400' },
-  clashroyale: { label: 'Clash Royale', badge: 'CR', bg: 'bg-blue-500/20', color: 'text-blue-400' },
+const PLATFORM_INFO: Record<string, { label: string; logo: string; color: string }> = {
+  chess: { label: 'Chess.com', logo: '/logos/chess.png', color: 'text-amber-400' },
+  brawlstars: { label: 'Brawl Stars', logo: '/logos/brawlstars.png', color: 'text-yellow-400' },
+  clashroyale: { label: 'Clash Royale', logo: '/logos/clashroyale.png', color: 'text-blue-400' },
 }
 
 interface Inviter {
@@ -175,9 +175,8 @@ export default function InvitePage() {
                   if (!info) return null
                   return (
                     <div key={platform} className="flex items-center gap-1.5 bg-[#0f0f13] px-3 py-2 rounded-lg">
-                      <span className={`${info.bg} ${info.color} text-xs font-bold px-1.5 py-0.5 rounded`}>
-                        {info.badge}
-                      </span>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={info.logo} alt={info.label} className="w-5 h-5 rounded object-cover" />
                       <span className={`text-xs font-medium ${info.color}`}>{info.label}</span>
                     </div>
                   )

@@ -26,9 +26,8 @@ export default function ChessCard({ username, data }: Props) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={data.avatar} alt={username} className="w-10 h-10 rounded-lg object-cover" />
         ) : (
-          <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
-            <span className="text-amber-400 font-bold text-base">♟</span>
-          </div>
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src="/logos/chess.png" alt="Chess.com" className="w-10 h-10 rounded-lg object-cover" />
         )}
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-white text-sm">Chess.com</h3>

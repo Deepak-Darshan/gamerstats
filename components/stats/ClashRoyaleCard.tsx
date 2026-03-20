@@ -15,9 +15,8 @@ export default function ClashRoyaleCard({ username, data }: Props) {
   return (
     <div className="bg-[#1a1a24] border border-blue-500/30 rounded-xl p-6 flex flex-col gap-4">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-          <span className="text-blue-400 text-xs font-bold">CR</span>
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logos/clashroyale.png" alt="Clash Royale" className="w-10 h-10 rounded-lg object-cover" />
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-white text-sm">Clash Royale</h3>
           <p className="text-blue-400 text-xs truncate">{data.name || username}</p>

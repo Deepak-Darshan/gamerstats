@@ -16,9 +16,8 @@ export default function BrawlStarsCard({ username, data }: Props) {
   return (
     <div className="bg-[#1a1a24] border border-yellow-500/30 rounded-xl p-6 flex flex-col gap-4">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
-          <span className="text-yellow-400 text-xs font-bold">BS</span>
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logos/brawlstars.png" alt="Brawl Stars" className="w-10 h-10 rounded-lg object-cover" />
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-white text-sm">Brawl Stars</h3>
           <p className="text-yellow-400 text-xs truncate">{data.name || username}</p>

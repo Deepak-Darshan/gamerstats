@@ -262,10 +262,10 @@ const PLATFORM_NAMES: Record<string, string> = {
   clashroyale: 'Clash Royale',
 }
 
-const PLATFORM_BADGES: Record<string, { text: string; bg: string; color: string }> = {
-  chess: { text: '♟', bg: 'bg-amber-500/20', color: 'text-amber-400' },
-  brawlstars: { text: 'BS', bg: 'bg-yellow-500/20', color: 'text-yellow-400' },
-  clashroyale: { text: 'CR', bg: 'bg-blue-500/20', color: 'text-blue-400' },
+const PLATFORM_LOGOS: Record<string, string> = {
+  chess: '/logos/chess.png',
+  brawlstars: '/logos/brawlstars.png',
+  clashroyale: '/logos/clashroyale.png',
 }
 
 const BORDER_COLORS: Record<string, string> = {
@@ -275,13 +275,12 @@ const BORDER_COLORS: Record<string, string> = {
 }
 
 function GameHeader({ platform }: { platform: string }) {
-  const badge = PLATFORM_BADGES[platform]
+  const logo = PLATFORM_LOGOS[platform]
   return (
     <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#2a2a3a]">
-      {badge && (
-        <div className={`w-6 h-6 rounded ${badge.bg} flex items-center justify-center`}>
-          <span className={`${badge.color} text-xs font-bold`}>{badge.text}</span>
-        </div>
+      {logo && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={logo} alt={platform} className="w-6 h-6 rounded object-cover" />
       )}
       <h3 className="font-bold text-white">{PLATFORM_NAMES[platform] ?? platform}</h3>
     </div>
@@ -464,9 +463,8 @@ function ChessH2HSection({ myUsername, friendUsername, data, loading, friendChes
   return (
     <div className="bg-[#1a1a24] border border-amber-500/30 rounded-xl p-6">
       <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#2a2a3a]">
-        <div className="w-6 h-6 rounded bg-amber-500/20 flex items-center justify-center">
-          <span className="text-amber-400 text-xs font-bold">♟</span>
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logos/chess.png" alt="Chess.com" className="w-6 h-6 rounded object-cover" />
         <h3 className="font-bold text-white">Head to Head — Chess.com</h3>
       </div>
 

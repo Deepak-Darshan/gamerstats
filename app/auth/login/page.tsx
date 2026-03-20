@@ -1,12 +1,15 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirect = searchParams.get('redirect')
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -25,7 +28,7 @@ export default function LoginPage() {
       return
     }
 
-    router.replace('/dashboard')
+    router.replace(redirect || '/dashboard')
   }
 
   return (
@@ -81,12 +84,23 @@ export default function LoginPage() {
 
           <p className="text-center text-gray-400 text-sm mt-6">
             Don&apos;t have an account?{' '}
-            <Link href="/auth/signup" className="text-indigo-400 hover:text-indigo-300">
+            <Link
+              href={redirect ? `/auth/signup?redirect=${encodeURIComponent(redirect)}` : '/auth/signup'}
+              className="text-indigo-400 hover:text-indigo-300"
+            >
               Sign up
             </Link>
           </p>
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   )
 }

@@ -2,6 +2,7 @@ export interface Profile {
   id: string
   username: string
   avatar_url: string | null
+  invite_token?: string
   created_at: string
 }
 

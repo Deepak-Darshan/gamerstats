@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
 interface GameAccount {
@@ -15,8 +15,11 @@ const PLATFORMS = [
   { id: 'clashroyale' as const, label: 'Clash Royale', color: 'blue', placeholder: 'Player tag (e.g. #ABC123)' },
 ]
 
-export default function OnboardingPage() {
+function OnboardingForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirect = searchParams.get('redirect')
+
   const [username, setUsername] = useState('')
   const [accounts, setAccounts] = useState<Record<string, string>>({
     chess: '',
@@ -54,7 +57,6 @@ export default function OnboardingPage() {
       return
     }
 
-    // Validate tag formats
     const tagPlatforms = ['brawlstars', 'clashroyale'] as const
     for (const p of tagPlatforms) {
       const val = accounts[p].trim()
@@ -66,7 +68,6 @@ export default function OnboardingPage() {
 
     setLoading(true)
 
-    // Insert profile
     const { error: profileError } = await supabase
       .from('profiles')
       .insert({ id: userId, username: username.trim() })
@@ -77,7 +78,6 @@ export default function OnboardingPage() {
       return
     }
 
-    // Insert linked accounts for any filled in
     const linkedAccounts: GameAccount[] = PLATFORMS
       .filter(p => accounts[p.id].trim())
       .map(p => ({ platform: p.id, username: accounts[p.id].trim() }))
@@ -98,7 +98,7 @@ export default function OnboardingPage() {
       }
     }
 
-    router.replace('/dashboard')
+    router.replace(redirect || '/dashboard')
   }
 
   return (
@@ -111,7 +111,6 @@ export default function OnboardingPage() {
 
         <div className="bg-[#1a1a24] border border-[#2a2a3a] rounded-xl p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Username */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1.5">
                 Username <span className="text-red-400">*</span>
@@ -155,11 +154,19 @@ export default function OnboardingPage() {
               disabled={loading}
               className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-lg transition-colors"
             >
-              {loading ? 'Saving...' : 'Continue to Dashboard'}
+              {loading ? 'Saving...' : 'Continue'}
             </button>
           </form>
         </div>
       </div>
     </div>
+  )
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense>
+      <OnboardingForm />
+    </Suspense>
   )
 }

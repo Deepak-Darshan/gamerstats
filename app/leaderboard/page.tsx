@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Trophy, Medal } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { ChessStats, BrawlStarsStats, ClashRoyaleStats } from '@/lib/types'
-import { Medal } from 'lucide-react'
 import Navbar from '@/components/ui/Navbar'
 
 type Platform = 'chess' | 'brawlstars' | 'clashroyale'
@@ -16,13 +17,29 @@ interface LeaderboardEntry {
   value: number | null
 }
 
-const PLATFORM_CONFIG: Record<Platform, { label: string; statLabel: string; color: string; borderColor: string }> = {
-  chess: { label: 'Chess.com', statLabel: 'Rapid Rating', color: 'text-amber-400', borderColor: 'border-amber-500/40' },
-  brawlstars: { label: 'Brawl Stars', statLabel: 'Trophies', color: 'text-yellow-400', borderColor: 'border-yellow-500/40' },
-  clashroyale: { label: 'Clash Royale', statLabel: 'Trophies', color: 'text-blue-400', borderColor: 'border-blue-500/40' },
+const PLATFORM_CONFIG: Record<Platform, {
+  label: string; statLabel: string; accent: string; logo: string
+  accentBg: string; accentBorder: string
+}> = {
+  chess: {
+    label: 'Chess.com', statLabel: 'Rapid Rating', accent: '#F59E0B',
+    logo: '/logos/chess.png', accentBg: 'bg-amber-500/10', accentBorder: 'border-amber-500/20',
+  },
+  brawlstars: {
+    label: 'Brawl Stars', statLabel: 'Trophies', accent: '#FBBF24',
+    logo: '/logos/brawlstars.png', accentBg: 'bg-yellow-400/10', accentBorder: 'border-yellow-400/20',
+  },
+  clashroyale: {
+    label: 'Clash Royale', statLabel: 'Trophies', accent: '#818CF8',
+    logo: '/logos/clashroyale.png', accentBg: 'bg-indigo-400/10', accentBorder: 'border-indigo-400/20',
+  },
 }
 
-const MEDAL_COLORS = ['text-yellow-400', 'text-gray-300', 'text-amber-600']
+const MEDAL_STYLES = [
+  { icon: <Medal size={18} />, color: 'text-amber-400', bg: 'bg-amber-400/10' },
+  { icon: <Medal size={18} />, color: 'text-slate-300', bg: 'bg-slate-300/10' },
+  { icon: <Medal size={18} />, color: 'text-amber-700', bg: 'bg-amber-700/10' },
+]
 
 export default function LeaderboardPage() {
   const router = useRouter()
@@ -45,7 +62,6 @@ export default function LeaderboardPage() {
   async function loadLeaderboard(uid: string, plat: Platform) {
     setLoading(true)
 
-    // Get accepted friends
     const { data: friendships } = await supabase
       .from('friendships')
       .select('user_id, friend_id')
@@ -57,7 +73,6 @@ export default function LeaderboardPage() {
     )
     const allIds = [uid, ...friendIds]
 
-    // Get linked accounts for this platform
     const { data: accounts } = await supabase
       .from('linked_accounts')
       .select('user_id, platform_username')
@@ -70,17 +85,12 @@ export default function LeaderboardPage() {
       return
     }
 
-    // Fetch profiles and stats in parallel
     const [{ data: profiles }, statResults] = await Promise.all([
-      supabase
-        .from('profiles')
-        .select('id, username')
-        .in('id', accounts.map(a => a.user_id)),
+      supabase.from('profiles').select('id, username').in('id', accounts.map(a => a.user_id)),
       Promise.all(
         accounts.map(account =>
           fetchSingleStat(plat, account.platform_username).then(value => ({
-            userId: account.user_id,
-            value,
+            userId: account.user_id, value,
           }))
         )
       ),
@@ -88,13 +98,8 @@ export default function LeaderboardPage() {
 
     const profileMap = Object.fromEntries((profiles || []).map(p => [p.id, p.username]))
 
-    const results = statResults.map(({ userId, value }) => ({
-      userId,
-      username: profileMap[userId] || 'Unknown',
-      value,
-    }))
-
-    const sorted = results
+    const sorted = statResults
+      .map(({ userId, value }) => ({ userId, username: profileMap[userId] || 'Unknown', value }))
       .filter(r => r.value !== null)
       .sort((a, b) => (b.value ?? 0) - (a.value ?? 0))
 
@@ -110,74 +115,121 @@ export default function LeaderboardPage() {
   const config = PLATFORM_CONFIG[platform]
 
   return (
-    <div className="min-h-screen bg-[#0f0f13]">
+    <div className="min-h-screen bg-[#080B14]">
       <Navbar />
-      <div className="max-w-3xl mx-auto px-6 py-8">
-        <h2 className="text-2xl font-bold text-white mb-6">Leaderboard</h2>
+      <div className="max-w-3xl mx-auto px-6 py-8 space-y-6">
+
+        {/* Header */}
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-[#0D1117] border border-[#1E2A3A] flex items-center justify-center">
+            <Trophy size={18} className="text-[#6366F1]" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-[#F1F5F9]">Leaderboard</h1>
+            <p className="text-xs text-[#475569]">You and your friends</p>
+          </div>
+        </motion.div>
 
         {/* Platform tabs */}
-        <div className="flex gap-2 mb-8">
-          {(Object.keys(PLATFORM_CONFIG) as Platform[]).map(plat => (
-            <button
-              key={plat}
-              onClick={() => handlePlatformChange(plat)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                platform === plat
-                  ? 'bg-[#2a2a3a] text-white'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              {PLATFORM_CONFIG[plat].label}
-            </button>
-          ))}
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+          className="flex gap-2 p-1 bg-[#0D1117] border border-[#1E2A3A] rounded-2xl"
+        >
+          {(Object.keys(PLATFORM_CONFIG) as Platform[]).map(plat => {
+            const cfg = PLATFORM_CONFIG[plat]
+            const active = platform === plat
+            return (
+              <button
+                key={plat}
+                onClick={() => handlePlatformChange(plat)}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium transition-all ${
+                  active ? 'bg-[#161B27] text-[#F1F5F9] shadow-sm' : 'text-[#475569] hover:text-[#94A3B8]'
+                }`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={cfg.logo} alt={cfg.label} className="w-4 h-4 rounded object-cover" />
+                <span className="hidden sm:inline">{cfg.label}</span>
+              </button>
+            )
+          })}
+        </motion.div>
 
-        <div className={`bg-[#1a1a24] border ${config.borderColor} rounded-xl overflow-hidden`}>
-          <div className="px-6 py-4 border-b border-[#2a2a3a] flex justify-between items-center">
-            <h3 className="font-semibold text-white">{config.label}</h3>
-            <span className={`text-xs ${config.color}`}>{config.statLabel}</span>
-          </div>
+        {/* Board */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={platform}
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.25 }}
+            className={`bg-[#0D1117] border rounded-2xl overflow-hidden ${config.accentBorder}`}
+          >
+            <div className="px-6 py-4 border-b border-[#1E2A3A] flex items-center gap-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={config.logo} alt={config.label} className="w-5 h-5 rounded object-cover" />
+              <h3 className="font-semibold text-[#F1F5F9] flex-1">{config.label}</h3>
+              <span className="text-xs font-medium" style={{ color: config.accent }}>{config.statLabel}</span>
+            </div>
 
-          {loading ? (
-            <div className="flex items-center justify-center h-32">
-              <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            </div>
-          ) : entries.length === 0 ? (
-            <div className="px-6 py-10 text-center">
-              <p className="text-gray-500 text-sm">
-                No {config.label} accounts linked among you and your friends.
-              </p>
-            </div>
-          ) : (
-            <div className="divide-y divide-[#2a2a3a]">
-              {entries.map((entry, index) => (
-                <div
-                  key={entry.userId}
-                  className={`flex items-center justify-between px-6 py-4 ${
-                    entry.userId === userId ? 'bg-[#2a2a3a]/40' : ''
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <span className="w-8 flex justify-center">
-                      {index < 3
-                        ? <Medal size={20} className={MEDAL_COLORS[index]} />
-                        : <span className="text-gray-500 text-sm font-medium">#{index + 1}</span>}
-                    </span>
-                    <Link href={`/profile/${entry.userId}`} className="text-white hover:text-indigo-300 font-medium transition-colors">
-                      {entry.username}
-                      {entry.userId === userId && (
-                        <span className="ml-2 text-xs text-indigo-400">(you)</span>
-                      )}
-                    </Link>
+            {loading ? (
+              <div className="divide-y divide-[#1E2A3A]">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="flex items-center gap-4 px-6 py-4">
+                    <div className="skeleton w-8 h-8 rounded-lg" />
+                    <div className="skeleton h-4 w-32 rounded" />
+                    <div className="skeleton h-5 w-16 rounded ml-auto" />
                   </div>
-                  <span className={`text-lg font-bold ${config.color}`}>
-                    {entry.value?.toLocaleString()}
-                  </span>
+                ))}
+              </div>
+            ) : entries.length === 0 ? (
+              <div className="px-6 py-12 text-center">
+                <div className="w-12 h-12 rounded-2xl bg-[#161B27] border border-[#2E3D52] flex items-center justify-center mx-auto mb-3">
+                  <Trophy size={20} className="text-[#2E3D52]" />
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+                <p className="text-[#475569] text-sm">
+                  No {config.label} accounts linked among you and your friends.
+                </p>
+              </div>
+            ) : (
+              <div className="divide-y divide-[#1E2A3A]">
+                {entries.map((entry, index) => {
+                  const isMe = entry.userId === userId
+                  const medal = MEDAL_STYLES[index]
+                  return (
+                    <motion.div
+                      key={entry.userId}
+                      initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }}
+                      className={`flex items-center gap-4 px-6 py-4 transition-colors ${isMe ? 'bg-[#6366F1]/5' : 'hover:bg-[#161B27]/50'}`}
+                    >
+                      <span className="w-8 flex justify-center flex-shrink-0">
+                        {medal ? (
+                          <span className={`w-8 h-8 rounded-lg ${medal.bg} ${medal.color} flex items-center justify-center`}>
+                            {medal.icon}
+                          </span>
+                        ) : (
+                          <span className="text-[#475569] text-sm font-medium">#{index + 1}</span>
+                        )}
+                      </span>
+                      <Link href={`/profile/${entry.userId}`} className="flex items-center gap-3 flex-1 min-w-0 group">
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                          style={{ background: isMe ? 'linear-gradient(135deg, #6366F1, #8B5CF6)' : 'linear-gradient(135deg, #374151, #1F2937)' }}
+                        >
+                          {entry.username[0]?.toUpperCase()}
+                        </div>
+                        <span className="text-sm font-medium text-[#F1F5F9] group-hover:text-indigo-300 transition-colors truncate">
+                          {entry.username}
+                          {isMe && <span className="ml-2 text-[10px] text-[#6366F1] font-semibold bg-[#6366F1]/10 px-1.5 py-0.5 rounded-full">you</span>}
+                        </span>
+                      </Link>
+                      <span className="text-base font-bold flex-shrink-0" style={{ color: config.accent }}>
+                        {entry.value?.toLocaleString()}
+                      </span>
+                    </motion.div>
+                  )
+                })}
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   )

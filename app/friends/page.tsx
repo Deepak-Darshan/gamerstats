@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Users, Search, UserPlus, Check, X, Clock, Swords } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { Profile } from '@/lib/types'
 import Navbar from '@/components/ui/Navbar'
@@ -70,7 +72,6 @@ export default function FriendsPage() {
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault()
     if (!search.trim() || !userId) return
-
     setSearching(true)
     const { data } = await supabase
       .from('profiles')
@@ -78,7 +79,6 @@ export default function FriendsPage() {
       .ilike('username', `%${search.trim()}%`)
       .neq('id', userId)
       .limit(10)
-
     setSearchResults(data || [])
     setSearching(false)
   }
@@ -86,11 +86,7 @@ export default function FriendsPage() {
   async function sendRequest(targetId: string) {
     if (!userId) return
     setActionLoading(targetId)
-    await supabase.from('friendships').insert({
-      user_id: userId,
-      friend_id: targetId,
-      status: 'pending',
-    })
+    await supabase.from('friendships').insert({ user_id: userId, friend_id: targetId, status: 'pending' })
     await loadFriends(userId)
     setSearchResults(prev => prev.filter(p => p.id !== targetId))
     setActionLoading(null)
@@ -98,10 +94,7 @@ export default function FriendsPage() {
 
   async function acceptRequest(friendshipId: string) {
     setActionLoading(friendshipId)
-    await supabase
-      .from('friendships')
-      .update({ status: 'accepted' })
-      .eq('id', friendshipId)
+    await supabase.from('friendships').update({ status: 'accepted' }).eq('id', friendshipId)
     if (userId) await loadFriends(userId)
     setActionLoading(null)
   }
@@ -116,157 +109,240 @@ export default function FriendsPage() {
   const accepted = friends.filter(f => f.status === 'accepted')
   const pendingReceived = friends.filter(f => f.status === 'pending' && f.direction === 'received')
   const pendingSent = friends.filter(f => f.status === 'pending' && f.direction === 'sent')
-
   const existingIds = new Set(friends.map(f => f.profile.id))
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0f0f13]">
+      <div className="min-h-screen bg-[#080B14]">
         <Navbar />
-        <div className="flex items-center justify-center h-64">
-          <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        <div className="max-w-3xl mx-auto px-6 py-8 space-y-4">
+          <div className="skeleton h-8 w-32 rounded-lg" />
+          <div className="skeleton h-28 rounded-2xl" />
+          <div className="skeleton h-48 rounded-2xl" />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0f13]">
+    <div className="min-h-screen bg-[#080B14]">
       <Navbar />
-      <div className="max-w-3xl mx-auto px-6 py-8 space-y-8">
-        <h2 className="text-2xl font-bold text-white">Friends</h2>
+      <div className="max-w-3xl mx-auto px-6 py-8 space-y-6">
+
+        {/* Header */}
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-[#0D1117] border border-[#1E2A3A] flex items-center justify-center">
+            <Users size={18} className="text-[#6366F1]" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-[#F1F5F9]">Friends</h1>
+            <p className="text-xs text-[#475569]">{accepted.length} connected</p>
+          </div>
+        </motion.div>
 
         {/* Search */}
-        <div className="bg-[#1a1a24] border border-[#2a2a3a] rounded-xl p-6">
-          <h3 className="font-semibold text-white mb-4">Find Players</h3>
-          <form onSubmit={handleSearch} className="flex gap-3">
-            <input
-              type="text"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search by username..."
-              className="flex-1 bg-[#0f0f13] border border-[#2a2a3a] rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition-colors"
-            />
+        <motion.div
+          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+          className="bg-[#0D1117] border border-[#1E2A3A] rounded-2xl p-5"
+        >
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#475569] mb-3">Find Players</p>
+          <form onSubmit={handleSearch} className="flex gap-2">
+            <div className="relative flex-1">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#475569]" />
+              <input
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search by username..."
+                className="w-full bg-[#080B14] border border-[#1E2A3A] rounded-xl pl-9 pr-4 py-2.5 text-[#F1F5F9] placeholder-[#475569] text-sm focus:outline-none focus:border-[#6366F1] focus:shadow-[0_0_0_3px_rgba(99,102,241,0.15)] transition-all"
+              />
+            </div>
             <button
               type="submit"
               disabled={searching}
-              className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white px-4 py-2.5 rounded-lg font-medium transition-colors"
+              className="bg-gradient-to-r from-indigo-500 to-violet-500 disabled:opacity-50 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
             >
-              {searching ? 'Searching...' : 'Search'}
+              {searching ? (
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin block" />
+              ) : 'Search'}
             </button>
           </form>
 
-          {searchResults.length > 0 && (
-            <div className="mt-4 space-y-2">
-              {searchResults.map(profile => {
-                const alreadyFriend = existingIds.has(profile.id)
-                return (
-                  <div key={profile.id} className="flex items-center justify-between bg-[#0f0f13] rounded-lg px-4 py-3">
-                    <Link href={`/profile/${profile.id}`} className="text-white hover:text-indigo-300 font-medium">
-                      {profile.username}
-                    </Link>
-                    {alreadyFriend ? (
-                      <span className="text-xs text-gray-500">Already connected</span>
-                    ) : (
-                      <button
-                        onClick={() => sendRequest(profile.id)}
-                        disabled={actionLoading === profile.id}
-                        className="text-sm text-indigo-400 hover:text-indigo-300 disabled:opacity-50 transition-colors"
-                      >
-                        {actionLoading === profile.id ? 'Sending...' : 'Add Friend'}
-                      </button>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
+          <AnimatePresence>
+            {searchResults.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                className="mt-3 space-y-1.5 overflow-hidden"
+              >
+                {searchResults.map(profile => {
+                  const alreadyFriend = existingIds.has(profile.id)
+                  return (
+                    <div key={profile.id} className="flex items-center justify-between bg-[#161B27] border border-[#2E3D52] rounded-xl px-4 py-3">
+                      <Link href={`/profile/${profile.id}`} className="flex items-center gap-3 group">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold">
+                          {profile.username?.[0]?.toUpperCase()}
+                        </div>
+                        <span className="text-sm font-medium text-[#F1F5F9] group-hover:text-indigo-300 transition-colors">
+                          {profile.username}
+                        </span>
+                      </Link>
+                      {alreadyFriend ? (
+                        <span className="text-xs text-[#475569] flex items-center gap-1"><Check size={12} /> Connected</span>
+                      ) : (
+                        <button
+                          onClick={() => sendRequest(profile.id)}
+                          disabled={actionLoading === profile.id}
+                          className="flex items-center gap-1.5 text-xs font-semibold text-[#6366F1] hover:text-indigo-300 disabled:opacity-50 transition-colors"
+                        >
+                          {actionLoading === profile.id ? (
+                            <span className="w-3 h-3 border border-[#6366F1]/30 border-t-[#6366F1] rounded-full animate-spin block" />
+                          ) : <UserPlus size={13} />}
+                          Add
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
 
         {/* Pending requests received */}
-        {pendingReceived.length > 0 && (
-          <div className="bg-[#1a1a24] border border-[#2a2a3a] rounded-xl p-6">
-            <h3 className="font-semibold text-white mb-4">Friend Requests</h3>
+        <AnimatePresence>
+          {pendingReceived.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+              className="bg-[#0D1117] border border-[#10B981]/20 rounded-2xl p-5"
+            >
+              <p className="text-xs font-semibold uppercase tracking-widest text-[#10B981] mb-3">
+                Friend Requests <span className="ml-1 bg-[#10B981]/20 text-[#10B981] text-[10px] px-2 py-0.5 rounded-full">{pendingReceived.length}</span>
+              </p>
+              <div className="space-y-2">
+                {pendingReceived.map(f => (
+                  <div key={f.id} className="flex items-center justify-between bg-[#161B27] border border-[#1E2A3A] rounded-xl px-4 py-3">
+                    <Link href={`/profile/${f.profile.id}`} className="flex items-center gap-3 group">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold">
+                        {f.profile.username?.[0]?.toUpperCase()}
+                      </div>
+                      <span className="text-sm font-medium text-[#F1F5F9] group-hover:text-indigo-300 transition-colors">
+                        {f.profile.username}
+                      </span>
+                    </Link>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => acceptRequest(f.id)}
+                        disabled={actionLoading === f.id}
+                        className="flex items-center gap-1.5 text-xs font-semibold bg-[#10B981]/20 text-[#10B981] hover:bg-[#10B981]/30 px-3 py-1.5 rounded-lg disabled:opacity-50 transition-colors"
+                      >
+                        <Check size={12} /> Accept
+                      </button>
+                      <button
+                        onClick={() => removeFriend(f.id)}
+                        disabled={actionLoading === f.id}
+                        className="flex items-center gap-1 text-xs text-[#475569] hover:text-[#EF4444] disabled:opacity-50 transition-colors p-1.5"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Friends list */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+          className="bg-[#0D1117] border border-[#1E2A3A] rounded-2xl p-5"
+        >
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#475569] mb-3">
+            Your Friends
+            <span className="ml-2 text-[#2E3D52] font-normal normal-case tracking-normal">({accepted.length})</span>
+          </p>
+          {accepted.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="w-12 h-12 rounded-2xl bg-[#161B27] border border-[#2E3D52] flex items-center justify-center mx-auto mb-3">
+                <Users size={20} className="text-[#2E3D52]" />
+              </div>
+              <p className="text-sm text-[#475569]">No friends yet.</p>
+              <p className="text-xs text-[#2E3D52] mt-1">Search for players above to connect.</p>
+            </div>
+          ) : (
             <div className="space-y-2">
-              {pendingReceived.map(f => (
-                <div key={f.id} className="flex items-center justify-between bg-[#0f0f13] rounded-lg px-4 py-3">
-                  <Link href={`/profile/${f.profile.id}`} className="text-white hover:text-indigo-300 font-medium">
-                    {f.profile.username}
+              {accepted.map((f, i) => (
+                <motion.div
+                  key={f.id}
+                  initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
+                  className="flex items-center justify-between bg-[#161B27] border border-[#1E2A3A] rounded-xl px-4 py-3 group hover:border-[#2E3D52] transition-colors"
+                >
+                  <Link href={`/profile/${f.profile.id}`} className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-sm font-bold">
+                      {f.profile.username?.[0]?.toUpperCase()}
+                    </div>
+                    <span className="text-sm font-medium text-[#F1F5F9] group-hover:text-indigo-300 transition-colors">
+                      {f.profile.username}
+                    </span>
                   </Link>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => acceptRequest(f.id)}
-                      disabled={actionLoading === f.id}
-                      className="text-sm bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white px-3 py-1.5 rounded-lg transition-colors"
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/compare/${f.profile.id}`}
+                      className="flex items-center gap-1.5 text-xs text-[#475569] hover:text-[#6366F1] transition-colors px-2 py-1.5 rounded-lg hover:bg-[#6366F1]/10"
                     >
-                      Accept
-                    </button>
+                      <Swords size={12} /> Compare
+                    </Link>
                     <button
                       onClick={() => removeFriend(f.id)}
                       disabled={actionLoading === f.id}
-                      className="text-sm text-gray-400 hover:text-red-400 disabled:opacity-50 transition-colors"
+                      className="text-xs text-[#2E3D52] hover:text-[#EF4444] disabled:opacity-50 transition-colors p-1.5"
                     >
-                      Decline
+                      <X size={14} />
                     </button>
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Friends list */}
-        <div className="bg-[#1a1a24] border border-[#2a2a3a] rounded-xl p-6">
-          <h3 className="font-semibold text-white mb-4">
-            Your Friends <span className="text-gray-500 font-normal text-sm">({accepted.length})</span>
-          </h3>
-          {accepted.length === 0 ? (
-            <p className="text-gray-500 text-sm">No friends yet. Search for players above.</p>
-          ) : (
-            <div className="space-y-2">
-              {accepted.map(f => (
-                <div key={f.id} className="flex items-center justify-between bg-[#0f0f13] rounded-lg px-4 py-3">
-                  <Link href={`/profile/${f.profile.id}`} className="text-white hover:text-indigo-300 font-medium">
-                    {f.profile.username}
-                  </Link>
-                  <button
-                    onClick={() => removeFriend(f.id)}
-                    disabled={actionLoading === f.id}
-                    className="text-xs text-gray-500 hover:text-red-400 disabled:opacity-50 transition-colors"
-                  >
-                    Remove
-                  </button>
-                </div>
+                </motion.div>
               ))}
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Sent requests */}
-        {pendingSent.length > 0 && (
-          <div className="bg-[#1a1a24] border border-[#2a2a3a] rounded-xl p-6">
-            <h3 className="font-semibold text-white mb-4">Pending Sent</h3>
-            <div className="space-y-2">
-              {pendingSent.map(f => (
-                <div key={f.id} className="flex items-center justify-between bg-[#0f0f13] rounded-lg px-4 py-3">
-                  <Link href={`/profile/${f.profile.id}`} className="text-white hover:text-indigo-300 font-medium">
-                    {f.profile.username}
-                  </Link>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-yellow-500">Pending</span>
-                    <button
-                      onClick={() => removeFriend(f.id)}
-                      disabled={actionLoading === f.id}
-                      className="text-xs text-gray-500 hover:text-red-400 disabled:opacity-50 transition-colors"
-                    >
-                      Cancel
-                    </button>
+        <AnimatePresence>
+          {pendingSent.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+              className="bg-[#0D1117] border border-[#1E2A3A] rounded-2xl p-5"
+            >
+              <p className="text-xs font-semibold uppercase tracking-widest text-[#475569] mb-3">Pending Sent</p>
+              <div className="space-y-2">
+                {pendingSent.map(f => (
+                  <div key={f.id} className="flex items-center justify-between bg-[#161B27] border border-[#1E2A3A] rounded-xl px-4 py-3">
+                    <Link href={`/profile/${f.profile.id}`} className="flex items-center gap-3 group">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white text-xs font-bold">
+                        {f.profile.username?.[0]?.toUpperCase()}
+                      </div>
+                      <span className="text-sm font-medium text-[#F1F5F9] group-hover:text-indigo-300 transition-colors">
+                        {f.profile.username}
+                      </span>
+                    </Link>
+                    <div className="flex items-center gap-3">
+                      <span className="flex items-center gap-1.5 text-xs text-[#F59E0B]">
+                        <Clock size={11} /> Pending
+                      </span>
+                      <button
+                        onClick={() => removeFriend(f.id)}
+                        disabled={actionLoading === f.id}
+                        className="text-xs text-[#2E3D52] hover:text-[#EF4444] disabled:opacity-50 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   )

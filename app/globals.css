@@ -1,16 +1,95 @@
 @import "tailwindcss";
 
+/* ── Design Tokens ────────────────────────────────────────────────────────── */
 :root {
-  --background: #0f0f13;
-  --foreground: #e8e8f0;
+  --background:       #080B14;
+  --surface:          #0D1117;
+  --surface-elevated: #161B27;
+  --border:           #1E2A3A;
+  --border-bright:    #2E3D52;
+  --primary:          #6366F1;
+  --primary-glow:     rgba(99, 102, 241, 0.15);
+  --secondary:        #F59E0B;
+  --success:          #10B981;
+  --danger:           #EF4444;
+  --text-primary:     #F1F5F9;
+  --text-secondary:   #94A3B8;
+  --text-tertiary:    #475569;
+
+  --chess:            #F59E0B;
+  --chess-glow:       rgba(245, 158, 11, 0.15);
+  --brawlstars:       #FBBF24;
+  --brawlstars-glow:  rgba(251, 191, 36, 0.15);
+  --clashroyale:      #818CF8;
+  --clashroyale-glow: rgba(129, 140, 248, 0.15);
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 * {
   box-sizing: border-box;
 }
+
+/* ── Scrollbar ────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar          { width: 6px; height: 6px; }
+::-webkit-scrollbar-track    { background: var(--surface); }
+::-webkit-scrollbar-thumb    { background: var(--primary); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #818CF8; }
+
+/* ── Selection ────────────────────────────────────────────────────────────── */
+::selection { background: var(--primary); color: #fff; }
+
+/* ── Skeleton shimmer ─────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface-elevated) 25%,
+    var(--border)            50%,
+    var(--surface-elevated)  75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* ── Floating (invite card) ───────────────────────────────────────────────── */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+.float-animation { animation: float 6s ease-in-out infinite; }
+
+/* ── Auth page orbs ───────────────────────────────────────────────────────── */
+@keyframes orb1 {
+  0%, 100% { transform: translate(0,   0)   scale(1);   }
+  33%       { transform: translate(30px, -50px) scale(1.1); }
+  66%       { transform: translate(-20px, 20px) scale(0.9); }
+}
+@keyframes orb2 {
+  0%, 100% { transform: translate(0,   0)   scale(1);   }
+  33%       { transform: translate(-40px, 30px) scale(0.9); }
+  66%       { transform: translate(20px, -30px) scale(1.1); }
+}
+@keyframes orb3 {
+  0%, 100% { transform: translate(0,   0)   scale(1);   }
+  33%       { transform: translate(20px, 40px) scale(1.05); }
+  66%       { transform: translate(-30px, -20px) scale(0.95); }
+}
+
+/* ── Tabular numbers ──────────────────────────────────────────────────────── */
+.tabular-nums { font-variant-numeric: tabular-nums; }

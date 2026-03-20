@@ -51,7 +51,24 @@ export default function DashboardPage() {
 
       if (!profile?.username) { router.replace('/onboarding'); return }
       setUsername(profile.username)
-      setInviteToken(profile.invite_token ?? null)
+
+      // Use existing token or generate one if missing
+      let token: string = profile.invite_token ?? ''
+      if (!token) {
+        const bytes = new Uint8Array(6)
+        crypto.getRandomValues(bytes)
+        token = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('')
+        const { data: updated } = await supabase
+          .from('profiles')
+          .update({ invite_token: token })
+          .eq('id', session.user.id)
+          .select('invite_token')
+          .maybeSingle()
+        // If the column doesn't exist yet the update will fail; use the
+        // locally-generated token optimistically so the UI still shows.
+        token = updated?.invite_token ?? token
+      }
+      setInviteToken(token)
 
       const { data: accounts } = await supabase
         .from('linked_accounts')
@@ -157,26 +174,24 @@ export default function DashboardPage() {
           <h3 className="text-xl font-bold text-white mb-4">Friends</h3>
 
           {/* Invite link */}
-          {inviteToken && (
-            <div className="bg-[#1a1a24] border border-indigo-500/30 rounded-xl p-5 mb-5 flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center text-xl flex-shrink-0">
-                🏆
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white mb-0.5">Invite a Friend</p>
-                <p className="text-xs text-gray-500 truncate">
-                  {typeof window !== 'undefined' ? window.location.origin : 'https://gamerstats.com'}/invite/{inviteToken}
-                </p>
-                <p className="text-xs text-gray-600 mt-0.5">Share this link with friends to connect on GamerStats</p>
-              </div>
-              <button
-                onClick={copyInviteLink}
-                className="flex-shrink-0 text-sm bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg transition-colors"
-              >
-                {copied ? 'Copied!' : 'Copy Link'}
-              </button>
+          <div className="bg-[#1a1a24] border border-indigo-500/30 rounded-xl p-5 mb-5 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center text-xl flex-shrink-0">
+              🏆
             </div>
-          )}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-white mb-0.5">Invite a Friend</p>
+              <p className="text-xs text-gray-500 truncate">
+                {typeof window !== 'undefined' ? window.location.origin : 'https://gamerstats.com'}/invite/{inviteToken}
+              </p>
+              <p className="text-xs text-gray-600 mt-0.5">Share this link with friends to connect on GamerStats</p>
+            </div>
+            <button
+              onClick={copyInviteLink}
+              className="flex-shrink-0 text-sm bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              {copied ? 'Copied!' : 'Copy Link'}
+            </button>
+          </div>
 
           {/* Friends list */}
           {friends.length === 0 ? (

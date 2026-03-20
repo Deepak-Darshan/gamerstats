@@ -28,15 +28,10 @@ function OnboardingForm() {
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [userId, setUserId] = useState<string | null>(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        router.replace('/auth/login')
-        return
-      }
-      setUserId(session.user.id)
+      if (!session) router.replace('/auth/login')
     })
   }, [router])
 

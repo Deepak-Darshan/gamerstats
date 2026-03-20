@@ -21,21 +21,52 @@ export interface Friendship {
   created_at: string
 }
 
-// Chess.com stats
+// Chess.com stats (combined from /stats and /player endpoints)
+interface ChessRecord {
+  win: number
+  draw: number
+  loss: number
+}
+
+interface ChessMode {
+  last?: { rating: number; date?: number }
+  best?: { rating: number; date?: number }
+  record?: ChessRecord
+}
+
 export interface ChessStats {
-  chess_rapid?: { last?: { rating: number }; best?: { rating: number } }
-  chess_blitz?: { last?: { rating: number }; best?: { rating: number } }
-  chess_bullet?: { last?: { rating: number }; best?: { rating: number } }
+  chess_rapid?: ChessMode
+  chess_blitz?: ChessMode
+  chess_bullet?: ChessMode
+  tactics?: { highest?: { rating: number }; lowest?: { rating: number } }
   fide?: number
+  // From /player profile endpoint
+  avatar?: string
+  country?: string
+  last_online?: number
+  name?: string
 }
 
 // Brawl Stars stats
+export interface BrawlBrawler {
+  name: string
+  power: number
+  trophies: number
+  highestTrophies?: number
+}
+
 export interface BrawlStarsStats {
   name: string
   trophies: number
   highestTrophies: number
   expLevel: number
-  brawlers?: { trophies: number }[]
+  '3vs3Victories'?: number
+  soloVictories?: number
+  duoVictories?: number
+  brawlers?: BrawlBrawler[]
+  powerPlayPoints?: number
+  highestPowerPlayPoints?: number
+  club?: { name: string }
 }
 
 // Clash Royale stats
@@ -47,6 +78,13 @@ export interface ClashRoyaleStats {
   arena?: { name: string }
   wins?: number
   losses?: number
+  battleCount?: number
+  threeCrownWins?: number
+  challengeMaxWins?: number
+  challengeCardsWon?: number
+  totalDonations?: number
+  clan?: { name: string }
+  currentFavouriteCard?: { name: string; iconUrls?: { medium: string } }
 }
 
 export interface GameStats {

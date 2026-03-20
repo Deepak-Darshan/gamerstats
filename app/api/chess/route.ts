@@ -6,15 +6,26 @@ export async function GET(request: NextRequest) {
     return Response.json({ error: 'username is required' }, { status: 400 })
   }
 
-  const res = await fetch(`https://api.chess.com/pub/player/${encodeURIComponent(username)}/stats`, {
-    headers: { 'User-Agent': 'GamerStats/1.0' },
-    next: { revalidate: 300 },
-  })
+  const headers = { 'User-Agent': 'GamerStats/1.0' }
+  const opts = { headers, next: { revalidate: 300 } } as const
 
-  if (!res.ok) {
-    return Response.json({ error: 'Player not found' }, { status: res.status })
+  const [statsRes, profileRes] = await Promise.all([
+    fetch(`https://api.chess.com/pub/player/${encodeURIComponent(username)}/stats`, opts),
+    fetch(`https://api.chess.com/pub/player/${encodeURIComponent(username)}`, opts),
+  ])
+
+  if (!statsRes.ok) {
+    return Response.json({ error: 'Player not found' }, { status: statsRes.status })
   }
 
-  const data = await res.json()
-  return Response.json(data)
+  const stats = await statsRes.json()
+  const profile = profileRes.ok ? await profileRes.json() : {}
+
+  return Response.json({
+    ...stats,
+    avatar: profile.avatar,
+    country: profile.country,
+    last_online: profile.last_online,
+    name: profile.name,
+  })
 }

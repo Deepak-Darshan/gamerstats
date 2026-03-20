@@ -70,29 +70,22 @@ export default function DashboardPage() {
       }
       setInviteToken(token)
 
-      const { data: accounts } = await supabase
-        .from('linked_accounts')
-        .select('*')
-        .eq('user_id', session.user.id)
+      const [{ data: accounts }, { data: friendships }] = await Promise.all([
+        supabase.from('linked_accounts').select('*').eq('user_id', session.user.id),
+        supabase
+          .from('friendships')
+          .select('user_id, friend_id')
+          .or(`user_id.eq.${session.user.id},friend_id.eq.${session.user.id}`)
+          .eq('status', 'accepted'),
+      ])
 
-      if (accounts && accounts.length > 0) {
-        const results = await Promise.all(accounts.map(fetchStats))
-        setStats(results)
-      }
+      const friendIds = (friendships || []).map(f =>
+        f.user_id === session.user.id ? f.friend_id : f.user_id
+      )
 
-      // Load accepted friends with their linked accounts
-      const { data: friendships } = await supabase
-        .from('friendships')
-        .select('user_id, friend_id')
-        .or(`user_id.eq.${session.user.id},friend_id.eq.${session.user.id}`)
-        .eq('status', 'accepted')
-
-      if (friendships && friendships.length > 0) {
-        const friendIds = friendships.map(f =>
-          f.user_id === session.user.id ? f.friend_id : f.user_id
-        )
-
-        const friendEntries = await Promise.all(friendIds.map(async (fid: string) => {
+      const [statsResults, friendEntries] = await Promise.all([
+        accounts && accounts.length > 0 ? Promise.all(accounts.map(fetchStats)) : Promise.resolve([]),
+        Promise.all(friendIds.map(async (fid: string) => {
           const [{ data: fProfile }, { data: fAccounts }] = await Promise.all([
             supabase.from('profiles').select('id, username, avatar_url').eq('id', fid).single(),
             supabase.from('linked_accounts').select('platform').eq('user_id', fid),
@@ -104,11 +97,11 @@ export default function DashboardPage() {
             avatar_url: fProfile.avatar_url,
             platforms: (fAccounts || []).map((a: { platform: string }) => a.platform),
           }
-        }))
+        })),
+      ])
 
-        setFriends(friendEntries.filter(Boolean) as FriendEntry[])
-      }
-
+      setStats(statsResults)
+      setFriends(friendEntries.filter(Boolean) as FriendEntry[])
       setLoading(false)
     }
 

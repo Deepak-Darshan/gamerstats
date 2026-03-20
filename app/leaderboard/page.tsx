@@ -69,25 +69,29 @@ export default function LeaderboardPage() {
       return
     }
 
-    // Get profiles
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id, username')
-      .in('id', accounts.map(a => a.user_id))
+    // Fetch profiles and stats in parallel
+    const [{ data: profiles }, statResults] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('id, username')
+        .in('id', accounts.map(a => a.user_id)),
+      Promise.all(
+        accounts.map(account =>
+          fetchSingleStat(plat, account.platform_username).then(value => ({
+            userId: account.user_id,
+            value,
+          }))
+        )
+      ),
+    ])
 
     const profileMap = Object.fromEntries((profiles || []).map(p => [p.id, p.username]))
 
-    // Fetch stats for each account
-    const results = await Promise.all(
-      accounts.map(async account => {
-        const stat = await fetchSingleStat(plat, account.platform_username)
-        return {
-          userId: account.user_id,
-          username: profileMap[account.user_id] || 'Unknown',
-          value: stat,
-        }
-      })
-    )
+    const results = statResults.map(({ userId, value }) => ({
+      userId,
+      username: profileMap[userId] || 'Unknown',
+      value,
+    }))
 
     const sorted = results
       .filter(r => r.value !== null)

@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     headers: {
       Authorization: `Bearer ${process.env.BRAWL_STARS_API_KEY}`,
     },
-    cache: 'no-store',
+    next: { revalidate: 60 },
   })
 
   if (!res.ok) {

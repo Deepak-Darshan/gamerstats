@@ -43,24 +43,27 @@ export default function FriendsPage() {
 
     if (!data) return
 
-    const entries: FriendEntry[] = []
-    for (const row of data) {
-      const otherId = row.user_id === uid ? row.friend_id : row.user_id
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', otherId)
-        .single()
+    const otherIds = data.map(row => row.user_id === uid ? row.friend_id : row.user_id)
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('*')
+      .in('id', otherIds)
 
-      if (profile) {
-        entries.push({
+    const profileMap = Object.fromEntries((profiles || []).map(p => [p.id, p]))
+
+    const entries = data
+      .map(row => {
+        const otherId = row.user_id === uid ? row.friend_id : row.user_id
+        const profile = profileMap[otherId]
+        if (!profile) return null
+        return {
           id: row.id,
           profile,
           status: row.status,
           direction: row.user_id === uid ? 'sent' : 'received',
-        })
-      }
-    }
+        } as FriendEntry
+      })
+      .filter(Boolean) as FriendEntry[]
     setFriends(entries)
   }
 

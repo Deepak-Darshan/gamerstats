@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { ChessStats, BrawlStarsStats, ClashRoyaleStats } from '@/lib/types'
+import { Medal } from 'lucide-react'
 import Navbar from '@/components/ui/Navbar'
 
 type Platform = 'chess' | 'brawlstars' | 'clashroyale'
@@ -21,7 +22,7 @@ const PLATFORM_CONFIG: Record<Platform, { label: string; statLabel: string; colo
   clashroyale: { label: 'Clash Royale', statLabel: 'Trophies', color: 'text-blue-400', borderColor: 'border-blue-500/40' },
 }
 
-const MEDAL = ['🥇', '🥈', '🥉']
+const MEDAL_COLORS = ['text-yellow-400', 'text-gray-300', 'text-amber-600']
 
 export default function LeaderboardPage() {
   const router = useRouter()
@@ -157,8 +158,10 @@ export default function LeaderboardPage() {
                   }`}
                 >
                   <div className="flex items-center gap-4">
-                    <span className="w-8 text-center text-lg">
-                      {index < 3 ? MEDAL[index] : <span className="text-gray-500 text-sm font-medium">#{index + 1}</span>}
+                    <span className="w-8 flex justify-center">
+                      {index < 3
+                        ? <Medal size={20} className={MEDAL_COLORS[index]} />
+                        : <span className="text-gray-500 text-sm font-medium">#{index + 1}</span>}
                     </span>
                     <Link href={`/profile/${entry.userId}`} className="text-white hover:text-indigo-300 font-medium transition-colors">
                       {entry.username}

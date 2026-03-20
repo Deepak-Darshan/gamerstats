@@ -1,3 +1,5 @@
+import { Trophy, Swords, Target, Users, Bot, Award, Home } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { BrawlStarsStats } from '@/lib/types'
 
 interface Props {
@@ -13,10 +15,9 @@ export default function BrawlStarsCard({ username, data }: Props) {
 
   return (
     <div className="bg-[#1a1a24] border border-yellow-500/30 rounded-xl p-6 flex flex-col gap-4">
-      {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center text-xl">
-          ⭐
+        <div className="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+          <span className="text-yellow-400 text-xs font-bold">BS</span>
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-white text-sm">Brawl Stars</h3>
@@ -29,43 +30,39 @@ export default function BrawlStarsCard({ username, data }: Props) {
         </div>
       </div>
 
-      {/* Trophies */}
       <div className="grid grid-cols-2 gap-2">
-        <Tile icon="🏆" label="Trophies" value={data.trophies.toLocaleString()} />
-        <Tile icon="👑" label="Best Ever" value={data.highestTrophies.toLocaleString()} />
+        <Tile icon={<Trophy size={11} />} label="Trophies" value={data.trophies.toLocaleString()} />
+        <Tile icon={<Award size={11} />} label="Best Ever" value={data.highestTrophies.toLocaleString()} />
       </div>
 
-      {/* Victories */}
       <div>
         <p className="text-xs text-gray-500 mb-2 uppercase tracking-wide">Victories</p>
         <div className="grid grid-cols-3 gap-2">
-          <Tile icon="⚔️" label="3v3" value={victories3v3?.toLocaleString() ?? '—'} />
-          <Tile icon="🎯" label="Solo" value={data.soloVictories?.toLocaleString() ?? '—'} />
-          <Tile icon="👥" label="Duo" value={data.duoVictories?.toLocaleString() ?? '—'} />
+          <Tile icon={<Swords size={11} />} label="3v3" value={victories3v3?.toLocaleString() ?? '—'} />
+          <Tile icon={<Target size={11} />} label="Solo" value={data.soloVictories?.toLocaleString() ?? '—'} />
+          <Tile icon={<Users size={11} />} label="Duo" value={data.duoVictories?.toLocaleString() ?? '—'} />
         </div>
       </div>
 
-      {/* Misc stats */}
       <div className="grid grid-cols-3 gap-2">
         <Tile
-          icon="🤖"
+          icon={<Bot size={11} />}
           label="Brawlers"
           value={data.brawlers ? String(data.brawlers.length) : '—'}
         />
         <Tile
-          icon="🏅"
+          icon={<Trophy size={11} />}
           label="Power Play"
           value={data.highestPowerPlayPoints?.toLocaleString() ?? '—'}
         />
         <Tile
-          icon="🏠"
+          icon={<Home size={11} />}
           label="Club"
           value={data.club?.name ?? 'None'}
           small
         />
       </div>
 
-      {/* Top brawlers */}
       {topBrawlers.length > 0 && (
         <div>
           <p className="text-xs text-gray-500 mb-2 uppercase tracking-wide">Top Brawlers</p>
@@ -78,7 +75,10 @@ export default function BrawlStarsCard({ username, data }: Props) {
                 </div>
                 <div className="flex items-center gap-3 text-xs text-gray-400">
                   <span className="text-yellow-600">Pw.{b.power}</span>
-                  <span className="text-yellow-400 font-medium">🏆 {b.trophies.toLocaleString()}</span>
+                  <div className="flex items-center gap-1 text-yellow-400 font-medium">
+                    <Trophy size={11} />
+                    <span>{b.trophies.toLocaleString()}</span>
+                  </div>
                 </div>
               </div>
             ))}
@@ -90,14 +90,17 @@ export default function BrawlStarsCard({ username, data }: Props) {
 }
 
 function Tile({ icon, label, value, small }: {
-  icon: string
+  icon: ReactNode
   label: string
   value: string
   small?: boolean
 }) {
   return (
     <div className="bg-[#0f0f13] rounded-lg p-3">
-      <p className="text-xs text-gray-500 mb-1">{icon} {label}</p>
+      <div className="flex items-center gap-1 text-xs text-gray-500 mb-1">
+        {icon}
+        <span>{label}</span>
+      </div>
       <p className={`font-bold text-yellow-400 truncate ${small ? 'text-xs' : 'text-base'}`}>
         {value}
       </p>

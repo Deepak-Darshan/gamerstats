@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { LinkedAccount, ChessStats, BrawlStarsStats, ClashRoyaleStats } from '@/lib/types'
+import { Trophy, Gamepad2 } from 'lucide-react'
 import Navbar from '@/components/ui/Navbar'
 import ChessCard from '@/components/stats/ChessCard'
 import BrawlStarsCard from '@/components/stats/BrawlStarsCard'
@@ -23,10 +24,10 @@ interface FriendEntry {
   platforms: string[]
 }
 
-const PLATFORM_ICONS: Record<string, { icon: string; color: string }> = {
-  chess: { icon: '♟️', color: 'text-amber-400' },
-  brawlstars: { icon: '⭐', color: 'text-yellow-400' },
-  clashroyale: { icon: '👑', color: 'text-blue-400' },
+const PLATFORM_BADGES: Record<string, { text: string; bg: string; color: string }> = {
+  chess: { text: '♟', bg: 'bg-amber-500/20', color: 'text-amber-400' },
+  brawlstars: { text: 'BS', bg: 'bg-yellow-500/20', color: 'text-yellow-400' },
+  clashroyale: { text: 'CR', bg: 'bg-blue-500/20', color: 'text-blue-400' },
 }
 
 export default function DashboardPage() {
@@ -168,8 +169,8 @@ export default function DashboardPage() {
 
           {/* Invite link */}
           <div className="bg-[#1a1a24] border border-indigo-500/30 rounded-xl p-5 mb-5 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center text-xl flex-shrink-0">
-              🏆
+            <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
+              <Trophy size={20} className="text-indigo-400" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-white mb-0.5">Invite a Friend</p>
@@ -201,8 +202,8 @@ export default function DashboardPage() {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={friend.avatar_url} alt={friend.username} className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
                   ) : (
-                    <div className="w-9 h-9 rounded-full bg-indigo-500/20 flex items-center justify-center text-sm flex-shrink-0">
-                      🎮
+                    <div className="w-9 h-9 rounded-full bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
+                      <Gamepad2 size={16} className="text-indigo-400" />
                     </div>
                   )}
 
@@ -214,9 +215,15 @@ export default function DashboardPage() {
                         <span className="text-xs text-gray-600">No games linked</span>
                       ) : (
                         friend.platforms.map(p => {
-                          const info = PLATFORM_ICONS[p]
-                          return info ? (
-                            <span key={p} title={p} className="text-sm">{info.icon}</span>
+                          const badge = PLATFORM_BADGES[p]
+                          return badge ? (
+                            <span
+                              key={p}
+                              title={p}
+                              className={`${badge.bg} ${badge.color} text-xs font-bold px-1.5 py-0.5 rounded`}
+                            >
+                              {badge.text}
+                            </span>
                           ) : null
                         })
                       )}

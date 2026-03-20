@@ -3,12 +3,13 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Link2, Gamepad2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
-const PLATFORM_INFO: Record<string, { label: string; icon: string; color: string }> = {
-  chess: { label: 'Chess.com', icon: '♟️', color: 'text-amber-400' },
-  brawlstars: { label: 'Brawl Stars', icon: '⭐', color: 'text-yellow-400' },
-  clashroyale: { label: 'Clash Royale', icon: '👑', color: 'text-blue-400' },
+const PLATFORM_INFO: Record<string, { label: string; badge: string; bg: string; color: string }> = {
+  chess: { label: 'Chess.com', badge: '♟', bg: 'bg-amber-500/20', color: 'text-amber-400' },
+  brawlstars: { label: 'Brawl Stars', badge: 'BS', bg: 'bg-yellow-500/20', color: 'text-yellow-400' },
+  clashroyale: { label: 'Clash Royale', badge: 'CR', bg: 'bg-blue-500/20', color: 'text-blue-400' },
 }
 
 interface Inviter {
@@ -128,7 +129,9 @@ export default function InvitePage() {
     return (
       <div className="min-h-screen bg-[#0f0f13] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-2xl mb-2">🔗</p>
+          <div className="flex justify-center mb-2">
+            <Link2 size={28} className="text-gray-500" />
+          </div>
           <p className="text-white font-semibold text-lg mb-1">Invalid invite link</p>
           <p className="text-gray-400 text-sm mb-4">This link may have expired or been removed.</p>
           <Link href="/dashboard" className="text-indigo-400 hover:text-indigo-300 text-sm">
@@ -153,8 +156,8 @@ export default function InvitePage() {
                 className="w-20 h-20 rounded-full object-cover ring-2 ring-indigo-500/40"
               />
             ) : (
-              <div className="w-20 h-20 rounded-full bg-indigo-500/20 flex items-center justify-center text-4xl">
-                🎮
+              <div className="w-20 h-20 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                <Gamepad2 size={36} className="text-indigo-400" />
               </div>
             )}
           </div>
@@ -172,7 +175,9 @@ export default function InvitePage() {
                   if (!info) return null
                   return (
                     <div key={platform} className="flex items-center gap-1.5 bg-[#0f0f13] px-3 py-2 rounded-lg">
-                      <span>{info.icon}</span>
+                      <span className={`${info.bg} ${info.color} text-xs font-bold px-1.5 py-0.5 rounded`}>
+                        {info.badge}
+                      </span>
                       <span className={`text-xs font-medium ${info.color}`}>{info.label}</span>
                     </div>
                   )

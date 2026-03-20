@@ -163,10 +163,11 @@ export default function DashboardPage() {
                 🏆
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white mb-0.5">Your Invite Link</p>
+                <p className="text-sm font-medium text-white mb-0.5">Invite a Friend</p>
                 <p className="text-xs text-gray-500 truncate">
                   {typeof window !== 'undefined' ? window.location.origin : 'https://gamerstats.com'}/invite/{inviteToken}
                 </p>
+                <p className="text-xs text-gray-600 mt-0.5">Share this link with friends to connect on GamerStats</p>
               </div>
               <button
                 onClick={copyInviteLink}

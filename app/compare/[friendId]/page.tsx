@@ -102,6 +102,13 @@ export default function ComparePage() {
     <div className="min-h-screen bg-[#0f0f13]">
       <Navbar />
       <div className="max-w-3xl mx-auto px-6 py-8 space-y-8">
+        {/* Back to Friends */}
+        <div>
+          <Link href="/friends" className="text-gray-500 hover:text-gray-400 text-sm">
+            ← Back to Friends
+          </Link>
+        </div>
+
         {/* VS header */}
         <div className="flex items-center justify-between bg-[#1a1a24] border border-[#2a2a3a] rounded-xl px-8 py-5">
           <div className="text-center flex-1">
@@ -151,9 +158,9 @@ export default function ComparePage() {
           </div>
         ))}
 
-        <div className="text-center">
-          <Link href="/dashboard" className="text-gray-500 hover:text-gray-400 text-sm">
-            ← Back to Dashboard
+        <div className="text-center pb-4">
+          <Link href="/friends" className="text-gray-500 hover:text-gray-400 text-sm">
+            ← Back to Friends
           </Link>
         </div>
       </div>
@@ -225,26 +232,26 @@ function StatRow({ label, myVal, friendVal, higherIsBetter = true }: {
   friendVal: number | null | undefined
   higherIsBetter?: boolean
 }) {
-  const [myColor, friendColor] = resolveColors(myVal, friendVal, higherIsBetter)
+  const [myClass, friendClass] = resolveClasses(myVal, friendVal, higherIsBetter)
   const fmt = (v: number | null | undefined) => v != null ? v.toLocaleString() : '—'
 
   return (
     <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 py-1.5">
-      <p className="text-right font-semibold text-base" style={{ color: myColor }}>{fmt(myVal)}</p>
+      <div className={`text-right font-semibold text-base rounded px-2 py-0.5 ${myClass}`}>{fmt(myVal)}</div>
       <p className="text-xs text-gray-500 text-center w-32 px-1">{label}</p>
-      <p className="text-left font-semibold text-base" style={{ color: friendColor }}>{fmt(friendVal)}</p>
+      <div className={`text-left font-semibold text-base rounded px-2 py-0.5 ${friendClass}`}>{fmt(friendVal)}</div>
     </div>
   )
 }
 
-function resolveColors(
+function resolveClasses(
   myVal: number | null | undefined,
   friendVal: number | null | undefined,
   higherIsBetter: boolean,
 ): [string, string] {
-  const gray = '#6b7280'
-  const green = '#22c55e'
-  const red = '#ef4444'
+  const gray = 'text-gray-400'
+  const green = 'bg-green-500/20 text-green-400'
+  const red = 'bg-red-500/20 text-red-400'
   if (myVal == null || friendVal == null) return [gray, gray]
   if (myVal === friendVal) return [gray, gray]
   const myWins = higherIsBetter ? myVal > friendVal : myVal < friendVal
@@ -252,14 +259,12 @@ function resolveColors(
 }
 
 function ChessRows({ my, friend }: { my: ChessStats; friend: ChessStats }) {
-  const myTotal = sumChessGames(my)
-  const friendTotal = sumChessGames(friend)
   return (
     <div className="divide-y divide-[#1e1e2a]">
       <StatRow label="⚡ Blitz" myVal={my.chess_blitz?.last?.rating} friendVal={friend.chess_blitz?.last?.rating} />
       <StatRow label="🚀 Rapid" myVal={my.chess_rapid?.last?.rating} friendVal={friend.chess_rapid?.last?.rating} />
       <StatRow label="💨 Bullet" myVal={my.chess_bullet?.last?.rating} friendVal={friend.chess_bullet?.last?.rating} />
-      <StatRow label="🎮 Total Games" myVal={myTotal || null} friendVal={friendTotal || null} />
+      <StatRow label="🧩 Puzzle" myVal={my.tactics?.highest?.rating} friendVal={friend.tactics?.highest?.rating} />
     </div>
   )
 }
@@ -286,13 +291,9 @@ function ClashRows({ my, friend }: { my: ClashRoyaleStats; friend: ClashRoyaleSt
       <StatRow label="⚔️ Wins" myVal={my.wins} friendVal={friend.wins} />
       <StatRow label="📊 Win Rate %" myVal={myRate} friendVal={friendRate} />
       <StatRow label="👑 3-Crown Wins" myVal={my.threeCrownWins} friendVal={friend.threeCrownWins} />
+      <StatRow label="🎮 Battle Count" myVal={my.battleCount} friendVal={friend.battleCount} />
     </div>
   )
-}
-
-function sumChessGames(s: ChessStats): number {
-  const sum = (r?: { win: number; draw: number; loss: number }) => r ? r.win + r.draw + r.loss : 0
-  return sum(s.chess_blitz?.record) + sum(s.chess_rapid?.record) + sum(s.chess_bullet?.record)
 }
 
 function winRate(s: ClashRoyaleStats): number | null {

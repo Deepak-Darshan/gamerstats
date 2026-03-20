@@ -129,7 +129,8 @@ export default function InvitePage() {
       <div className="min-h-screen bg-[#0f0f13] flex items-center justify-center">
         <div className="text-center">
           <p className="text-2xl mb-2">🔗</p>
-          <p className="text-gray-400 text-lg mb-4">Invite link not found.</p>
+          <p className="text-white font-semibold text-lg mb-1">Invalid invite link</p>
+          <p className="text-gray-400 text-sm mb-4">This link may have expired or been removed.</p>
           <Link href="/dashboard" className="text-indigo-400 hover:text-indigo-300 text-sm">
             Go to Dashboard →
           </Link>
@@ -192,7 +193,7 @@ export default function InvitePage() {
 
           {status === 'already_friends' && (
             <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
-              <p className="text-green-400 font-medium">Already connected! ✓</p>
+              <p className="text-green-400 font-medium">You&apos;re already connected with {inviter?.username}!</p>
               <Link href="/dashboard" className="text-gray-400 hover:text-gray-300 text-sm mt-2 block">
                 Go to Dashboard →
               </Link>
@@ -200,10 +201,16 @@ export default function InvitePage() {
           )}
 
           {status === 'added' && (
-            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
-              <p className="text-green-400 font-semibold text-lg">Friend added! ✓</p>
-              <Link href="/dashboard" className="text-indigo-400 hover:text-indigo-300 text-sm mt-2 block">
-                Go to Dashboard →
+            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 space-y-3">
+              <p className="text-green-400 font-semibold text-lg">✓ {inviter?.username} added as friend!</p>
+              <Link
+                href={`/profile/${inviter?.id}`}
+                className="block w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 rounded-lg transition-colors text-center text-sm"
+              >
+                View their profile
+              </Link>
+              <Link href="/dashboard" className="block text-gray-500 hover:text-gray-400 text-sm text-center">
+                Go to Dashboard
               </Link>
             </div>
           )}

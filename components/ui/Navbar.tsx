@@ -17,17 +17,19 @@ export default function Navbar() {
   const router = useRouter()
   const pathname = usePathname()
   const [avatarLetter, setAvatarLetter] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) return
       const { data } = await supabase
         .from('profiles')
-        .select('username')
+        .select('username, avatar_url')
         .eq('id', session.user.id)
         .maybeSingle()
       const letter = data?.username?.[0] ?? session.user.email?.[0] ?? '?'
       setAvatarLetter(letter.toUpperCase())
+      setAvatarUrl(data?.avatar_url ?? null)
     })
   }, [])
 
@@ -84,9 +86,16 @@ export default function Navbar() {
           <div className="relative">
             <motion.div
               whileHover={{ scale: 1.08 }}
-              className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold cursor-pointer ring-2 ring-transparent hover:ring-indigo-500/40 transition-all"
+              className="w-8 h-8 rounded-full overflow-hidden cursor-pointer ring-2 ring-transparent hover:ring-indigo-500/40 transition-all flex-shrink-0"
             >
-              {avatarLetter || '?'}
+              {avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold">
+                  {avatarLetter || '?'}
+                </div>
+              )}
             </motion.div>
             <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-[#10B981] rounded-full border-2 border-[#080B14]" />
           </div>

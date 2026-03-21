@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Settings, Check, Save } from 'lucide-react'
+import { Settings, Check, Save, Camera } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import Navbar from '@/components/ui/Navbar'
 
@@ -36,9 +36,36 @@ function validateTag(platform: Platform, value: string): string | null {
   return null
 }
 
+async function resizeImageToBlob(file: File, maxSize: number): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => {
+      let { width, height } = img
+      if (width > maxSize || height > maxSize) {
+        const ratio = Math.min(maxSize / width, maxSize / height)
+        width = Math.round(width * ratio)
+        height = Math.round(height * ratio)
+      }
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      canvas.getContext('2d')!.drawImage(img, 0, 0, width, height)
+      canvas.toBlob(b => b ? resolve(b) : reject(new Error('Canvas toBlob failed')), 'image/jpeg', 0.85)
+      URL.revokeObjectURL(img.src)
+    }
+    img.onerror = reject
+    img.src = URL.createObjectURL(file)
+  })
+}
+
 export default function SettingsPage() {
   const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [userId, setUserId] = useState<string | null>(null)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [username, setUsername] = useState('')
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const [avatarError, setAvatarError] = useState('')
   const [accounts, setAccounts] = useState<Record<Platform, string>>({
     chess: '', brawlstars: '', clashroyale: '',
   })
@@ -55,20 +82,65 @@ export default function SettingsPage() {
       if (!session) { router.replace('/auth/login'); return }
       setUserId(session.user.id)
 
-      const { data } = await supabase
-        .from('linked_accounts')
-        .select('platform, platform_username')
-        .eq('user_id', session.user.id)
+      const [{ data: profile }, { data: accounts }] = await Promise.all([
+        supabase.from('profiles').select('username, avatar_url').eq('id', session.user.id).single(),
+        supabase.from('linked_accounts').select('platform, platform_username').eq('user_id', session.user.id),
+      ])
 
-      if (data) {
+      if (profile) {
+        setUsername(profile.username ?? '')
+        setAvatarUrl(profile.avatar_url ?? null)
+      }
+
+      if (accounts) {
         const map: Record<Platform, string> = { chess: '', brawlstars: '', clashroyale: '' }
-        for (const row of data) map[row.platform as Platform] = row.platform_username
+        for (const row of accounts) map[row.platform as Platform] = row.platform_username
         setAccounts(map)
       }
       setLoading(false)
     }
     load()
   }, [router])
+
+  async function handleAvatarFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !userId) return
+    e.target.value = ''
+
+    setAvatarError('')
+
+    if (file.size > 2 * 1024 * 1024) {
+      setAvatarError('File must be under 2 MB')
+      return
+    }
+
+    setAvatarUploading(true)
+    try {
+      const blob = await resizeImageToBlob(file, 400)
+      const ext = 'jpg'
+      const path = `${userId}/avatar.${ext}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(path, blob, { upsert: true, contentType: 'image/jpeg' })
+
+      if (uploadError) { setAvatarError(uploadError.message); return }
+
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
+      // Bust cache by appending a timestamp
+      const urlWithBust = `${publicUrl}?t=${Date.now()}`
+
+      const { error: profileError } = await supabase
+        .from('profiles').update({ avatar_url: urlWithBust }).eq('id', userId)
+
+      if (profileError) { setAvatarError(profileError.message); return }
+      setAvatarUrl(urlWithBust)
+    } catch {
+      setAvatarError('Upload failed. Please try again.')
+    } finally {
+      setAvatarUploading(false)
+    }
+  }
 
   async function handleSave(platform: Platform) {
     if (!userId) return
@@ -140,9 +212,78 @@ export default function SettingsPage() {
           </div>
         </motion.div>
 
-        {/* Linked accounts */}
+        {/* Avatar */}
         <motion.div
           initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+          className="bg-[#0D1117] border border-[#1E2A3A] rounded-2xl p-6"
+        >
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#475569] mb-4">Profile Picture</p>
+          <div className="flex items-center gap-5">
+            {/* Clickable avatar */}
+            <div className="relative group flex-shrink-0">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarFileChange}
+              />
+              <button
+                onClick={() => !avatarUploading && fileInputRef.current?.click()}
+                disabled={avatarUploading}
+                className="relative w-20 h-20 rounded-full overflow-hidden focus:outline-none"
+              >
+                {avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-2xl font-bold">
+                    {username[0]?.toUpperCase() ?? '?'}
+                  </div>
+                )}
+                {/* Hover overlay */}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-center justify-center">
+                  {avatarUploading ? (
+                    <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <Camera size={20} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                  )}
+                </div>
+              </button>
+              {/* Ring */}
+              <div className="absolute inset-0 rounded-full ring-2 ring-[#1E2A3A] group-hover:ring-[#6366F1]/50 transition-all pointer-events-none" />
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-[#F1F5F9] mb-1">{username}</p>
+              <p className="text-xs text-[#475569] mb-3">
+                Click your avatar to upload a new photo. Max 2 MB, resized to 400×400.
+              </p>
+              <button
+                onClick={() => !avatarUploading && fileInputRef.current?.click()}
+                disabled={avatarUploading}
+                className="text-xs font-semibold text-[#6366F1] hover:text-indigo-300 disabled:opacity-50 transition-colors"
+              >
+                {avatarUploading ? 'Uploading…' : 'Change photo'}
+              </button>
+            </div>
+          </div>
+
+          <AnimatePresence>
+            {avatarError && (
+              <motion.p
+                initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                className="text-xs text-[#EF4444] mt-3"
+              >
+                {avatarError}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </motion.div>
+
+        {/* Linked accounts */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
           className="bg-[#0D1117] border border-[#1E2A3A] rounded-2xl overflow-hidden"
         >
           <div className="px-6 py-4 border-b border-[#1E2A3A]">

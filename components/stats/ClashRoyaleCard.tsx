@@ -27,10 +27,15 @@ function useCountUp(target: number, duration = 1400) {
 
 // ── Battlelog types ───────────────────────────────────────────────────────────
 
+interface CRCard {
+  name: string
+  iconUrls?: { medium?: string }
+}
+
 interface CRPlayer {
   tag: string
   name: string
-  cards: { name: string }[]
+  cards: CRCard[]
 }
 
 interface BattleItem {
@@ -39,10 +44,15 @@ interface BattleItem {
   opponent: CRPlayer[]
 }
 
+interface DeckCard {
+  name: string
+  iconUrl?: string
+}
+
 interface DayInsights {
   favName: string
   favCount: number
-  topDeck: string[]      // 8 card names (already sorted)
+  topDeck: DeckCard[]
   topDeckCount: number
 }
 
@@ -58,9 +68,10 @@ function analyzeBattlelog(battles: BattleItem[], playerTag: string): DayInsights
   const prefix   = todayUTCPrefix()
   const cleanSelf = playerTag.replace(/^#/, '').toUpperCase()
 
-  const oppCounts = new Map<string, number>()
-  const oppNames  = new Map<string, string>()
+  const oppCounts  = new Map<string, number>()
+  const oppNames   = new Map<string, string>()
   const deckCounts = new Map<string, number>()
+  const deckCards  = new Map<string, DeckCard[]>()
 
   for (const b of battles) {
     if (!b.battleTime.startsWith(prefix)) continue
@@ -76,20 +87,25 @@ function analyzeBattlelog(battles: BattleItem[], playerTag: string): DayInsights
     const me = b.team?.find(p => p.tag.replace(/^#/, '').toUpperCase() === cleanSelf)
       ?? b.team?.[0]
     if (me?.cards?.length) {
-      const deckKey = me.cards.map(c => c.name).sort().join('|')
+      const sorted = [...me.cards].sort((a, b) => a.name.localeCompare(b.name))
+      const deckKey = sorted.map(c => c.name).join('|')
       deckCounts.set(deckKey, (deckCounts.get(deckKey) ?? 0) + 1)
+      // Store card data (with icon URLs) on first encounter
+      if (!deckCards.has(deckKey)) {
+        deckCards.set(deckKey, sorted.map(c => ({ name: c.name, iconUrl: c.iconUrls?.medium })))
+      }
     }
   }
 
   if (oppCounts.size === 0 && deckCounts.size === 0) return null
 
-  const [favTag = '', favCount = 0]     = [...oppCounts.entries()].sort((a, b) => b[1] - a[1])[0] ?? []
+  const [favTag = '', favCount = 0]         = [...oppCounts.entries()].sort((a, b) => b[1] - a[1])[0] ?? []
   const [topDeckKey = '', topDeckCount = 0] = [...deckCounts.entries()].sort((a, b) => b[1] - a[1])[0] ?? []
 
   return {
     favName: oppNames.get(favTag) ?? favTag,
     favCount,
-    topDeck: topDeckKey ? topDeckKey.split('|') : [],
+    topDeck: deckCards.get(topDeckKey) ?? [],
     topDeckCount,
   }
 }
@@ -291,9 +307,18 @@ export default function ClashRoyaleCard({ username, data }: Props) {
                         {insights.topDeck.slice(0, 8).map((card, i) => (
                           <div
                             key={i}
-                            className="bg-[#0D1117] border border-indigo-500/20 rounded-lg px-1.5 py-1.5 text-center"
+                            className="bg-[#0D1117] border border-indigo-500/20 rounded-lg p-1 flex flex-col items-center gap-0.5"
+                            title={card.name}
                           >
-                            <p className="text-[9px] font-medium text-[#94A3B8] leading-tight line-clamp-2">{card}</p>
+                            {card.iconUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={card.iconUrl} alt={card.name} className="w-10 h-10 object-contain" />
+                            ) : (
+                              <div className="w-10 h-10 rounded bg-indigo-500/10 flex items-center justify-center">
+                                <Crown size={14} className="text-indigo-400/50" />
+                              </div>
+                            )}
+                            <p className="text-[8px] text-[#475569] leading-tight text-center line-clamp-1 w-full">{card.name}</p>
                           </div>
                         ))}
                       </div>

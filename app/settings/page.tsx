@@ -40,16 +40,15 @@ async function resizeImageToBlob(file: File, maxSize: number): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const img = new Image()
     img.onload = () => {
-      let { width, height } = img
-      if (width > maxSize || height > maxSize) {
-        const ratio = Math.min(maxSize / width, maxSize / height)
-        width = Math.round(width * ratio)
-        height = Math.round(height * ratio)
-      }
+      // Center-crop to square, then scale to maxSize
+      const srcSize = Math.min(img.width, img.height)
+      const sx = (img.width - srcSize) / 2
+      const sy = (img.height - srcSize) / 2
+      const outSize = Math.min(srcSize, maxSize)
       const canvas = document.createElement('canvas')
-      canvas.width = width
-      canvas.height = height
-      canvas.getContext('2d')!.drawImage(img, 0, 0, width, height)
+      canvas.width = outSize
+      canvas.height = outSize
+      canvas.getContext('2d')!.drawImage(img, sx, sy, srcSize, srcSize, 0, 0, outSize, outSize)
       canvas.toBlob(b => b ? resolve(b) : reject(new Error('Canvas toBlob failed')), 'image/jpeg', 0.85)
       URL.revokeObjectURL(img.src)
     }

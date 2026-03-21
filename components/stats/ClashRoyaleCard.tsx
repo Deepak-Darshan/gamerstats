@@ -295,14 +295,8 @@ export default function ClashRoyaleCard({ username, data }: Props) {
                     </div>
                   )}
 
-                  {/* Section 2: Most used deck — only show if genuinely repeated */}
-                  {insights.topDeckCount <= 1 && insights.favCount > 0 && (
-                    <div className="bg-[#161B27] border border-indigo-500/20 rounded-2xl p-4 text-center space-y-1">
-                      <Crown size={16} className="text-indigo-400/40 mx-auto" />
-                      <p className="text-xs text-[#475569]">Use the same deck in multiple battles today to see your most used deck.</p>
-                    </div>
-                  )}
-                  {insights.topDeckCount > 1 && insights.topDeck.length > 0 && (
+                  {/* Section 2: Most used deck */}
+                  {insights.topDeck.length > 0 && (
                     <div className="bg-[#161B27] border border-indigo-500/20 rounded-2xl p-4 space-y-3">
                       <div className="flex items-center justify-center gap-1.5">
                         <Crown size={11} className="text-indigo-400" />

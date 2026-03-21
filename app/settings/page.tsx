@@ -224,7 +224,7 @@ export default function SettingsPage() {
               <button
                 onClick={() => !avatarUploading && fileInputRef.current?.click()}
                 disabled={avatarUploading}
-                className="relative w-20 h-20 rounded-full overflow-hidden focus:outline-none"
+                className="relative w-20 h-20 rounded-full overflow-hidden focus:outline-none ring-2 ring-[#1E2A3A] group-hover:ring-[#6366F1]/50 transition-all"
               >
                 {avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -243,8 +243,6 @@ export default function SettingsPage() {
                   )}
                 </div>
               </button>
-              {/* Ring */}
-              <div className="absolute inset-0 rounded-full ring-2 ring-[#1E2A3A] group-hover:ring-[#6366F1]/50 transition-all pointer-events-none" />
             </div>
 
             <div className="flex-1 min-w-0">

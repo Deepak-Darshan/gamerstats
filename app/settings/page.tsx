@@ -108,12 +108,6 @@ export default function SettingsPage() {
     e.target.value = ''
 
     setAvatarError('')
-
-    if (file.size > 2 * 1024 * 1024) {
-      setAvatarError('File must be under 2 MB')
-      return
-    }
-
     setAvatarUploading(true)
     try {
       const blob = await resizeImageToBlob(file, 400)
@@ -257,7 +251,7 @@ export default function SettingsPage() {
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-[#F1F5F9] mb-1">{username}</p>
               <p className="text-xs text-[#475569] mb-3">
-                Click your avatar to upload a new photo. Max 2 MB, resized to 400×400.
+                Click your avatar to upload a new photo. Automatically resized to 400×400.
               </p>
               <button
                 onClick={() => !avatarUploading && fileInputRef.current?.click()}
